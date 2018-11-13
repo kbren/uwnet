@@ -57,6 +57,7 @@ def get_dataset(data):
         return dataset
 
 
+
 def water_budget_plots(model, ds, location, filenames):
     nt = min(len(ds.time), 190)
     scm_data = single_column_simulation(model, location, interval=(0, nt - 1))
@@ -277,6 +278,7 @@ class Trainer(object):
         self.engine.add_event_handler(Events.EPOCH_COMPLETED,
                                       self.print_metrics)
         self.engine.add_event_handler(Events.EPOCH_COMPLETED, self.after_epoch)
+        self.engine.add_event_handler(Events.EPOCH_COMPLETED, self.imbalance_plot)
 
         self.setup_meters()
 
@@ -382,6 +384,28 @@ class Trainer(object):
                 for name in ['qt', 'fqtnn', 'fqtnn-obs', 'pw']
             ]
             water_budget_plots(self.model, self.dataset, location, filenames)
+
+
+    def imbalance_plot(self, engine):
+        i = engine.state.epoch
+        mass = self.dataset.layer_mass
+        subset = self.dataset.isel(time=slice(0, None, 20))
+        out = self.model.call_with_xr(subset)
+        pme = (subset.Prec- lhf_to_evap(subset.LHF)).mean(['time', 'x'])
+        pmenn = - (mass * out.QT).sum('z')/1000
+        pmefqt = ((mass * subset.FQT).sum('z')/1000*86400).mean(['time', 'x'])
+        pmenn = pmenn.mean(['time', 'x'])
+        plotme = xr.Dataset({'truth': pme, 'nn': pmenn, 'fqt':
+                            pmefqt}).to_array(dim='var')
+
+        plt.figure()
+        plotme.sel(y=slice(.4e7, .6e7)).plot(hue='var')
+
+        with self.change_to_work_dir():
+            plt.savefig(f"{i}-imbalance.png")
+
+        plt.close()
+
 
     def _make_work_dir(self):
         try:
