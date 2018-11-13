@@ -1,5 +1,4 @@
 import torch
-from toolz import curry, valmap
 from torch import nn
 from torch.autograd import Variable
 
@@ -57,37 +56,3 @@ class Scaler(nn.Module):
             else:
                 out[key] = x[key]
         return out
-
-
-def bucketize(tensor, bucket_boundaries):
-    """Equivalent to numpy.digitize
-
-    Notes
-    -----
-    Torch does not have a built in equivalent yet. I found this snippet here:
-    https://github.com/pytorch/pytorch/issues/7284
-    """
-    result = torch.zeros_like(tensor, dtype=torch.int32)
-    for boundary in bucket_boundaries:
-        result += (tensor > boundary).int()
-    return result
-
-
-class DispatchByVariable(nn.Module):
-    """Dispatch
-
-    """
-    def __init__(self, bins, objs, variable, index):
-        super(DispatchByVariable, self).__init__()
-        self.bins = bins
-        self.objs = objs
-        self.variable = variable
-        self.index = index
-
-    def get_binning_variable(self, x):
-        return x[self.variable][..., self.index]
-
-    def get_bin_membership(self, x):
-        y = self.get_binning_variable(x)
-        return bucketize(y, self.bins)
-

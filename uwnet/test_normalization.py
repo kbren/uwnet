@@ -1,5 +1,5 @@
 import torch
-from .normalization import Scaler, DispatchByVariable
+from .normalization import Scaler
 import pytest
 from toolz import curry
 
@@ -17,15 +17,3 @@ def test_Scaler():
     scaled = y['x']
     assert scaled.mean().item() == approx(0.0)
     assert scaled.std().item() == approx(1.0)
-
-
-def test_dispatch_by_variables_membership():
-
-    bins = [0, 1, 2, 3]
-    expected = [0, 1, 3, 2, 4]
-    a = torch.tensor(expected).float() - .5
-    x = {'a': a.view(-1, 1)}
-    model = DispatchByVariable(bins, bins, 'a', 0)
-    membership = model.get_bin_membership(x)
-    expected = [0, 1, 3, 2, 4]
-    assert membership.tolist() == expected
