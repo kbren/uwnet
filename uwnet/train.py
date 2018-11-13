@@ -346,10 +346,12 @@ class Trainer(object):
             'loss': state.output,
         }
 
+        n = len(self.train_loader)
+        batch = state.iteration % (n + 1)
         ex.log_scalar('loss', batch_info['loss'])
         # ex.log_scalar('time_elapsed', batch_info['time_elapsed'])
         # self.meters['loss'].reset()
-        self.logger.info(f"Loss: {batch_info['loss']}; ")
+        self.logger.info(f"[{batch}/{n}]; Loss: {batch_info['loss']}; ")
         # f"Time Elapsed {time_elapsed_batch} ")
 
     def _train_for_epoch(self):
@@ -399,7 +401,7 @@ class Trainer(object):
                             pmefqt}).to_array(dim='var')
 
         plt.figure()
-        plotme.sel(y=slice(.4e7, .6e7)).plot(hue='var')
+        plotme.plot(hue='var')
 
         with self.change_to_work_dir():
             plt.savefig(f"{i}-imbalance.png")
