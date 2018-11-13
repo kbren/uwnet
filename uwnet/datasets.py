@@ -29,7 +29,7 @@ def _to_numpy(x: xr.DataArray):
 
 
 def _ds_slice_to_torch(ds):
-    return valmap(lambda x: torch.from_numpy(x).detach(),
+    return valmap(lambda x: torch.from_numpy(x).detach().float(),
                   _ds_slice_to_numpy_dict(ds))
 
 
@@ -120,8 +120,8 @@ class XRTimeSeries(Dataset):
 
     @property
     def scale(self):
-        std = self.std
-        return valmap(lambda x: x.max(), std)
+        scale = self.data.quantile(.99, ['x', 'y', 'time'])
+        return _ds_slice_to_torch(scale)
 
     def timestep(self):
         time_dim = 'time'

@@ -7,9 +7,9 @@ from functools import partial
 from torch import nn
 
 import xarray as xr
+
 from uwnet.modules import LinearDictIn, LinearDictOut
 from uwnet.normalization import Scaler
-
 
 def cat(seq):
     seq_with_nulldim = []

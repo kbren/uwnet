@@ -64,6 +64,25 @@ def weighted_mean_squared_error(truth, prediction, weights=1.0, dim=-1):
     return torch.mean(error2 * weights)
 
 
+@curry
+def column_and_not_mse(truth, prediction, weights=1.0, dim=-1):
+    if dim < 0:
+        dims_to_expand = abs(dim) - 1
+    else:
+        raise NotImplementedError
+
+    new_dims = [-1] + [1]*dims_to_expand
+    weights = weights.view(*new_dims)
+    mass = weights.sum(dim)
+
+    xcol = (truth * weights).mean(dim)
+    ycol = (prediction * weights).mean(dim)
+
+    l1 = mse_loss(xcol, ycol)/1000 * 2
+    l2 = weighted_mean_squared_error(truth, prediction, weights, dim)
+    return l1 + l2
+
+
 def select_keys_time(x, keys, t):
     return {key: x[key][t] for key in keys}
 
